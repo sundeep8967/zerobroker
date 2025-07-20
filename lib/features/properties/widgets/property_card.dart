@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/models/property_model.dart';
 import '../../../core/services/favorites_service.dart';
+import '../../../core/constants/app_constants.dart';
 
 class PropertyCard extends StatelessWidget {
   final Property property;

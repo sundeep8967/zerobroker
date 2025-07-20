@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/favorites_service.dart';
+import '../../../core/models/property_model.dart';
 import '../providers/property_provider.dart';
 import '../widgets/property_card.dart';
 
@@ -39,7 +40,7 @@ class FavoritesScreen extends StatelessWidget {
           final favoriteIds = favoritesProvider.favoritePropertyIds;
           
           if (favoriteIds.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(context);
           }
           
           // Get favorite properties
@@ -50,7 +51,7 @@ class FavoritesScreen extends StatelessWidget {
               .toList();
           
           if (favoriteProperties.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(context);
           }
           
           return ListView.builder(
@@ -65,7 +66,7 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
   
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

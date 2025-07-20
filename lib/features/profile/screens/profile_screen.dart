@@ -28,7 +28,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
             _buildStatsSection(),
             const SizedBox(height: 24),
-            _buildMenuSection(),
+            _buildMenuSection(context),
           ],
         ),
       ),
@@ -144,7 +144,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuSection() {
+  Widget _buildMenuSection(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
