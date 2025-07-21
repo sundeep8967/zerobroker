@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import '../../properties/screens/favorites_screen.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../../core/models/user_model.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.currentUser;
+        
+        return Scaffold(
       backgroundColor: CupertinoColors.systemGroupedBackground,
       appBar: CupertinoNavigationBar(
         backgroundColor: CupertinoColors.systemBackground,
@@ -24,18 +32,50 @@ class ProfileScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildProfileHeader(),
+            _buildProfileHeader(user, context),
             const SizedBox(height: 24),
             _buildStatsSection(),
             const SizedBox(height: 24),
-            _buildMenuSection(context),
+            _buildMenuSection(context, authProvider),
           ],
         ),
       ),
     );
+      },
+    );
   }
 
-  Widget _buildProfileHeader() {
+  void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text('Logout'),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await authProvider.logout();
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileHeader(UserModel? user, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -58,17 +98,17 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'John Doe',
-            style: TextStyle(
+          Text(
+            user?.name ?? 'User',
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '+91 98765 43210',
-            style: TextStyle(
+          Text(
+            user?.phone ?? '+91 98765 43210',
+            style: const TextStyle(
               fontSize: 16,
               color: CupertinoColors.systemGrey,
             ),
@@ -79,7 +119,11 @@ class ProfileScreen extends StatelessWidget {
             color: CupertinoColors.systemBlue,
             borderRadius: BorderRadius.circular(20),
             onPressed: () {
-              // TODO: Implement edit profile
+              Navigator.of(context).push(
+                CupertinoPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              );
             },
             child: const Text(
               'Edit Profile',
@@ -144,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuSection(BuildContext context) {
+  Widget _buildMenuSection(BuildContext context, AuthProvider authProvider) {
     return Container(
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
@@ -208,7 +252,7 @@ class ProfileScreen extends StatelessWidget {
             'Logout',
             CupertinoIcons.square_arrow_right,
             () {
-              // TODO: Implement logout
+              _showLogoutDialog(context, authProvider);
             },
             isDestructive: true,
           ),

@@ -89,15 +89,20 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Implement Google Sign-In
+      // Simulate Google Sign-In process
       await Future.delayed(const Duration(seconds: 2));
       
+      // Create user with Google account details
       _currentUser = UserModel(
-        id: 'user_google_123',
-        name: 'Google User',
-        email: 'user@gmail.com',
+        id: 'google_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'John Smith',
+        email: 'john.smith@gmail.com',
+        phone: '+91 9876543210',
         createdAt: DateTime.now(),
-        preferences: UserPreferences(),
+        preferences: UserPreferences(
+          preferredCity: 'Bangalore',
+          maxBudget: 50000,
+        ),
       );
       
       _isAuthenticated = true;

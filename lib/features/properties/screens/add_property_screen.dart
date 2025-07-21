@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:location/location.dart' as loc;
+import 'dart:io';
+import '../../../core/constants/app_constants.dart';
+import '../widgets/location_picker.dart';
 
 class AddPropertyScreen extends StatefulWidget {
   const AddPropertyScreen({super.key});
@@ -17,6 +22,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   
   String _selectedType = 'Apartment';
   final List<String> _propertyTypes = ['Apartment', 'House', 'Villa', 'Studio'];
+  final List<File> _selectedImages = [];
+  final ImagePicker _imagePicker = ImagePicker();
+  loc.LocationData? _selectedLocation;
 
   @override
   void dispose() {
@@ -25,6 +33,39 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     _priceController.dispose();
     _addressController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    if (_selectedImages.length >= AppConstants.maxPhotos) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Maximum ${AppConstants.maxPhotos} photos allowed')),
+      );
+      return;
+    }
+
+    try {
+      final List<XFile> images = await _imagePicker.pickMultiImage();
+      
+      if (images.isNotEmpty) {
+        setState(() {
+          for (var image in images) {
+            if (_selectedImages.length < AppConstants.maxPhotos) {
+              _selectedImages.add(File(image.path));
+            }
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to pick images')),
+      );
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
   }
 
   @override
@@ -72,13 +113,22 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               ),
               const SizedBox(height: 24),
               _buildSection(
+                'Photos',
+                [
+                  _buildPhotoSection(),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildSection(
                 'Location',
                 [
-                  _buildTextField(
-                    controller: _addressController,
-                    label: 'Address',
-                    placeholder: 'Enter complete address',
-                    maxLines: 3,
+                  LocationPicker(
+                    onLocationSelected: (location) {
+                      setState(() {
+                        _selectedLocation = location;
+                      });
+                    },
+                    initialAddress: _addressController.text,
                   ),
                 ],
               ),
@@ -279,5 +329,172 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       );
       Navigator.of(context).pop();
     }
+  }
+
+  Widget _buildPhotoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Property Photos',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              '${_selectedImages.length}/${AppConstants.maxPhotos}',
+              style: const TextStyle(
+                fontSize: 14,
+                color: CupertinoColors.systemGrey,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_selectedImages.isEmpty)
+          _buildAddPhotoButton()
+        else
+          _buildPhotoGrid(),
+      ],
+    );
+  }
+
+  Widget _buildAddPhotoButton() {
+    return GestureDetector(
+      onTap: _pickImages,
+      child: Container(
+        height: 120,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: CupertinoColors.systemGrey4,
+            style: BorderStyle.solid,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.camera,
+              size: 32,
+              color: CupertinoColors.systemGrey,
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Add Photos',
+              style: TextStyle(
+                color: CupertinoColors.systemGrey,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Tap to select photos',
+              style: TextStyle(
+                color: CupertinoColors.systemGrey2,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoGrid() {
+    return Column(
+      children: [
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1,
+          ),
+          itemCount: _selectedImages.length + 1,
+          itemBuilder: (context, index) {
+            if (index == _selectedImages.length) {
+              return _buildAddMoreButton();
+            }
+            return _buildPhotoItem(index);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddMoreButton() {
+    if (_selectedImages.length >= AppConstants.maxPhotos) {
+      return const SizedBox.shrink();
+    }
+    
+    return GestureDetector(
+      onTap: _pickImages,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: CupertinoColors.systemGrey4),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.add,
+              color: CupertinoColors.systemGrey,
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Add More',
+              style: TextStyle(
+                fontSize: 10,
+                color: CupertinoColors.systemGrey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoItem(int index) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            image: DecorationImage(
+              image: FileImage(_selectedImages[index]),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: () => _removeImage(index),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: CupertinoColors.systemRed,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                CupertinoIcons.xmark,
+                size: 12,
+                color: CupertinoColors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

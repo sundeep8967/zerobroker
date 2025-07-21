@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/models/property_model.dart';
 import '../../../core/services/favorites_service.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/widgets/animated_widgets.dart';
 
 class PropertyCard extends StatelessWidget {
   final Property property;
@@ -38,8 +39,8 @@ class PropertyCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Property Image
-              _buildPropertyImage(),
+              // Property Image with Hero Animation
+              _buildPropertyImageWithHero(),
               
               // Property Details
               Padding(
@@ -75,6 +76,178 @@ class PropertyCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPropertyImageWithHero() {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(16),
+        topRight: Radius.circular(16),
+      ),
+      child: Stack(
+        children: [
+          // Main Image with Hero Animation
+          Hero(
+            tag: 'property_image_${property.id}',
+            child: Container(
+              height: 200,
+              width: double.infinity,
+              child: property.photos.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: property.photos.first,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: AppTheme.backgroundColor,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppTheme.backgroundColor,
+                        child: const Icon(
+                          Icons.home,
+                          size: 50,
+                          color: AppTheme.secondaryTextColor,
+                        ),
+                      ),
+                    )
+                  : Container(
+                      color: AppTheme.backgroundColor,
+                      child: const Icon(
+                        Icons.home,
+                        size: 50,
+                        color: AppTheme.secondaryTextColor,
+                      ),
+                    ),
+            ),
+          ),
+          
+          // Property Type Badge
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                property.propertyType,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          
+          // Featured Badge
+          if (property.isFeatured)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'FEATURED',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          
+          // Photo Count
+          if (property.photos.length > 1)
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.photo_library,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${property.photos.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          
+          // Favorite Button
+          Positioned(
+            top: 12,
+            right: 12,
+            child: Consumer<FavoritesProvider>(
+              builder: (context, favoritesProvider, child) {
+                final isFavorite = favoritesProvider.isFavorite(property.id);
+                return GestureDetector(
+                  onTap: () {
+                    final isNowFavorite = favoritesProvider.toggleFavorite(property.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isNowFavorite 
+                            ? 'Added to favorites' 
+                            : 'Removed from favorites'
+                        ),
+                        duration: const Duration(seconds: 1),
+                        backgroundColor: isNowFavorite 
+                          ? AppTheme.secondaryColor 
+                          : AppTheme.secondaryTextColor,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : AppTheme.secondaryTextColor,
+                      size: 20,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

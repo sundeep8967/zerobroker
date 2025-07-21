@@ -86,6 +86,33 @@ class PropertyProvider extends ChangeNotifier {
     }
   }
 
+  // Unlock contact for a property
+  Future<bool> unlockContact(String propertyId) async {
+    try {
+      final propertyIndex = _properties.indexWhere((p) => p.id == propertyId);
+      if (propertyIndex != -1) {
+        final property = _properties[propertyIndex];
+        final updatedProperty = property.copyWith(
+          unlocks: property.unlocks + 1,
+        );
+        _properties[propertyIndex] = updatedProperty;
+        
+        // Update filtered properties as well
+        final filteredIndex = _filteredProperties.indexWhere((p) => p.id == propertyId);
+        if (filteredIndex != -1) {
+          _filteredProperties[filteredIndex] = updatedProperty;
+        }
+        
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error unlocking contact: $e');
+      return false;
+    }
+  }
+
   // Add property
   Future<bool> addProperty(Property property) async {
     try {
@@ -113,24 +140,6 @@ class PropertyProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Unlock contact for a property
-  Future<bool> unlockContact(String propertyId) async {
-    try {
-      final propertyIndex = _properties.indexWhere((p) => p.id == propertyId);
-      if (propertyIndex != -1) {
-        _properties[propertyIndex] = _properties[propertyIndex].copyWith(
-          unlocks: _properties[propertyIndex].unlocks + 1,
-        );
-        applyFilters(_currentFilters);
-        return true;
-      }
-      return false;
-    } catch (e) {
-      _error = 'Failed to unlock contact';
-      debugPrint('Unlock contact error: $e');
-      return false;
-    }
-  }
 
   // Generate dummy properties for demo
   List<Property> _generateDummyProperties() {
