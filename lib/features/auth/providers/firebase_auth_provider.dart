@@ -131,10 +131,11 @@ class FirebaseAuthProvider extends ChangeNotifier {
             id: user.uid,
             name: user.displayName ?? 'User',
             email: user.email ?? '',
-            phone: user.phoneNumber ?? '',
-            profilePictureUrl: user.photoURL,
+            phone: user.phoneNumber,
+            profilePicture: user.photoURL,
             createdAt: DateTime.now(),
             isActive: true,
+            preferences: UserPreferences(),
           );
           
           await FirebaseService.createUser(newUser);
@@ -186,10 +187,11 @@ class FirebaseAuthProvider extends ChangeNotifier {
             id: user.uid,
             name: user.displayName ?? 'User',
             email: user.email ?? '',
-            phone: user.phoneNumber ?? '',
-            profilePictureUrl: user.photoURL,
+            phone: user.phoneNumber,
+            profilePicture: user.photoURL,
             createdAt: DateTime.now(),
             isActive: true,
+            preferences: UserPreferences(),
           );
           
           await FirebaseService.createUser(newUser);

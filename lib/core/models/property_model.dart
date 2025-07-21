@@ -141,6 +141,7 @@ class Property {
 
   // Copy with method for updates
   Property copyWith({
+    String? id,
     String? title,
     String? description,
     double? rent,
@@ -162,7 +163,7 @@ class Property {
     DateTime? featuredUntil,
   }) {
     return Property(
-      id: id,
+      id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
       rent: rent ?? this.rent,

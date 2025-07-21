@@ -119,14 +119,6 @@ class _MapScreenState extends State<MapScreen> {
           child: Text('Map Filters Coming Soon'),
         ),
       ), // MapFiltersBottomSheet(
-        currentFilters: _filters,
-        onFiltersApplied: (filters) {
-          setState(() {
-            _filters = filters;
-          });
-          _loadPropertyMarkers();
-        },
-      ),
     );
   }
 
