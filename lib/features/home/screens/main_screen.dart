@@ -120,7 +120,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         ),
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        type: BottomNavigationBarType.fixed,
         items: _navItems.map((item) {
           return BottomNavigationBarItem(
             icon: item.icon,
