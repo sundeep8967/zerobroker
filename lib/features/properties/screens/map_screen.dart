@@ -17,8 +17,8 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
-  Property? _selectedProperty;
   Map<String, dynamic> _filters = {};
+  Property? _selectedProperty;
   
   // Default location (Bangalore)
   static const CameraPosition _initialPosition = CameraPosition(

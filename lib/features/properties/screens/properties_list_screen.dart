@@ -5,9 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/animated_widgets.dart';
-import '../../../core/constants/app_constants.dart';
 import '../providers/property_provider.dart';
-import '../widgets/property_card.dart';
 import '../widgets/animated_property_card.dart' as animated;
 import '../widgets/filter_bottom_sheet.dart';
 
@@ -22,7 +20,6 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   bool _isSearching = false;
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -47,23 +44,6 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
     }
   }
 
-  void _onSearchChanged(String query) {
-    setState(() {
-      _searchQuery = query;
-    });
-    context.read<PropertyProvider>().searchProperties(query);
-  }
-
-  void _toggleSearch() {
-    setState(() {
-      _isSearching = !_isSearching;
-      if (!_isSearching) {
-        _searchController.clear();
-        _searchQuery = '';
-        context.read<PropertyProvider>().searchProperties('');
-      }
-    });
-  }
 
   void _showFilterBottomSheet() {
     showModalBottomSheet(

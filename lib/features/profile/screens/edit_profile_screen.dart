@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {

@@ -6,8 +6,8 @@ import '../models/property_model.dart';
 import '../models/user_model.dart';
 
 class FirebaseService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // Collections

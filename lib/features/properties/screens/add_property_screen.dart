@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart' as loc;
 import 'dart:io';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_theme.dart';
 import '../widgets/location_picker.dart';
 
 class AddPropertyScreen extends StatefulWidget {
@@ -22,11 +20,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final _priceController = TextEditingController();
   final _addressController = TextEditingController();
   
+  loc.LocationData? _selectedLocation;
+  
   String _selectedType = 'Apartment';
   final List<String> _propertyTypes = ['Apartment', 'House', 'Villa', 'Studio'];
   final List<File> _selectedImages = [];
   final ImagePicker _imagePicker = ImagePicker();
-  loc.LocationData? _selectedLocation;
 
   @override
   void dispose() {

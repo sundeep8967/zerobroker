@@ -54,7 +54,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       return;
     }
 
-    final success = await PaymentService.showPaymentDialog(
+    await PaymentService.showPaymentDialog(
       context: context,
       propertyTitle: property.title,
       onSuccess: () {

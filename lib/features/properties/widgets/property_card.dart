@@ -6,7 +6,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/models/property_model.dart';
 import '../../../core/services/favorites_service.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/widgets/animated_widgets.dart';
 
 class PropertyCard extends StatelessWidget {
   final Property property;
