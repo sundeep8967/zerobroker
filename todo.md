@@ -58,10 +58,10 @@
   - [ ] Icon set design (SF Symbols style)
 
 ### 1.3 Technical Planning
-- [ ] Finalize tech stack (Flutter + Firebase/Backend)
-- [ ] Choose payment gateway (Razorpay recommended)
-- [ ] Plan database schema
-- [ ] Set up development environment
+- [x] Finalize tech stack (Flutter + Firebase/Backend)
+- [x] Choose payment gateway (Razorpay recommended)
+- [x] Plan database schema
+- [x] Set up development environment
 
 ---
 
@@ -84,24 +84,24 @@
 - [x] Connected profile screen to favorites screen
 
 ### 2.1 Project Setup
-- [ ] Initialize Flutter project structure
+- [x] Initialize Flutter project structure
 - [ ] Set up Firebase project
-- [ ] Configure Android/iOS build settings
-- [ ] Add required dependencies
+- [x] Configure Android/iOS build settings
+- [x] Add required dependencies
 
 ### 2.2 Authentication Module
-- [ ] **Phone OTP Authentication**
-  - [ ] OTP sending functionality
-  - [ ] OTP verification
-  - [ ] User registration flow
+- [x] **Phone OTP Authentication**
+  - [x] OTP sending functionality
+  - [x] OTP verification
+  - [x] User registration flow
   
-- [ ] **Google Sign-In**
-  - [ ] Google Auth setup
-  - [ ] User data handling
+- [x] **Google Sign-In**
+  - [x] Google Auth setup
+  - [x] User data handling
   
-- [ ] **User Profile**
-  - [ ] Profile creation/editing
-  - [ ] Profile picture upload
+- [x] **User Profile**
+  - [x] Profile creation/editing
+  - [x] Profile picture upload
 
 ### 2.3 Property Listing Module
 - [x] **Database Schema**
@@ -117,13 +117,13 @@
 - [x] **List View**
   - [x] Property cards with basic info
   - [x] Search functionality
-  - [ ] Infinite scroll/pagination
+  - [x] Infinite scroll/pagination
   - [x] Pull to refresh
   
 - [x] **Map View**
   - [x] Map view placeholder with property pins
-  - [ ] Google Maps integration
-  - [ ] Property markers
+  - [x] Google Maps integration
+  - [x] Property markers
   - [ ] Cluster markers for multiple properties
   - [ ] Map filters
 
@@ -170,15 +170,15 @@
   - [x] Hidden phone number by default
   - [x] "Unlock for ₹10" button
   - [x] Show contact after successful payment
-  - [ ] Show phone number after payment
-  - [ ] Call/WhatsApp buttons
-  - [ ] Prevent duplicate payments
+  - [x] Show phone number after payment
+  - [x] Call/WhatsApp buttons
+  - [x] Prevent duplicate payments
 
 ### 2.6 Basic Filters
-- [ ] **Filter Options**
-  - [ ] Price range slider
-  - [ ] Property type (1BHK, 2BHK, etc.)
-  - [ ] Location/area selection
+- [x] **Filter Options**
+  - [x] Price range slider
+  - [x] Property type (1BHK, 2BHK, etc.)
+  - [x] Location/area selection
   - [ ] Availability date
 
 ---

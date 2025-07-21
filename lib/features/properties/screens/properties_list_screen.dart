@@ -17,13 +17,31 @@ class PropertiesListScreen extends StatefulWidget {
 
 class _PropertiesListScreenState extends State<PropertiesListScreen> {
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
   bool _isSearching = false;
   String _searchQuery = '';
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      // Load more when user is 200px from bottom
+      final propertyProvider = context.read<PropertyProvider>();
+      if (propertyProvider.hasMoreData && !propertyProvider.isLoadingMore) {
+        propertyProvider.loadMoreProperties();
+      }
+    }
   }
 
   void _onSearchChanged(String query) {
@@ -307,19 +325,53 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
   }
 
   Widget _buildPropertiesList(PropertyProvider propertyProvider) {
+    final itemCount = propertyProvider.properties.length + 
+        (propertyProvider.hasMoreData ? 1 : 0); // Add 1 for loading indicator
+    
     return RefreshIndicator(
       onRefresh: () => propertyProvider.initializeProperties(),
       color: AppTheme.primaryColor,
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
-        itemCount: propertyProvider.properties.length,
+        itemCount: itemCount,
         itemBuilder: (context, index) {
+          // Show loading indicator at the bottom
+          if (index == propertyProvider.properties.length) {
+            return _buildLoadingMoreIndicator(propertyProvider);
+          }
+          
           final property = propertyProvider.properties[index];
           return AnimatedPropertyCard(
             delay: Duration(milliseconds: index * 100),
             child: PropertyCard(property: property),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildLoadingMoreIndicator(PropertyProvider propertyProvider) {
+    if (!propertyProvider.hasMoreData) return const SizedBox.shrink();
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: propertyProvider.isLoadingMore
+            ? Column(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Loading more properties...',
+                    style: TextStyle(
+                      color: AppTheme.secondaryTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }

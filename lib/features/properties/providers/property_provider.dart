@@ -6,29 +6,72 @@ class PropertyProvider extends ChangeNotifier {
   List<Property> _filteredProperties = [];
   PropertyFilters _currentFilters = PropertyFilters();
   bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMoreData = true;
   String? _error;
+  int _currentPage = 0;
+  static const int _pageSize = 10;
   
   // Getters
   List<Property> get properties => _filteredProperties;
   PropertyFilters get currentFilters => _currentFilters;
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMoreData => _hasMoreData;
   String? get error => _error;
 
   // Initialize with dummy data
   Future<void> initializeProperties() async {
     _isLoading = true;
     _error = null;
+    _currentPage = 0;
+    _hasMoreData = true;
     notifyListeners();
 
     try {
       // Generate dummy properties for demo
-      _properties = _generateDummyProperties();
+      final allProperties = _generateDummyProperties();
+      _properties = allProperties.take(_pageSize).toList();
       _filteredProperties = List.from(_properties);
+      _hasMoreData = allProperties.length > _pageSize;
     } catch (e) {
       _error = 'Failed to load properties';
       debugPrint('Property initialization error: $e');
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load more properties for pagination
+  Future<void> loadMoreProperties() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 800)); // Simulate network delay
+      
+      final allProperties = _generateDummyProperties();
+      final startIndex = (_currentPage + 1) * _pageSize;
+      final endIndex = startIndex + _pageSize;
+      
+      if (startIndex < allProperties.length) {
+        final newProperties = allProperties.skip(startIndex).take(_pageSize).toList();
+        _properties.addAll(newProperties);
+        _currentPage++;
+        _hasMoreData = endIndex < allProperties.length;
+        
+        // Apply current filters to new properties
+        applyFilters(_currentFilters);
+      } else {
+        _hasMoreData = false;
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoadingMore = false;
       notifyListeners();
     }
   }

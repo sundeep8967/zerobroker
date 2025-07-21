@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/models/property_model.dart';
 import '../providers/property_provider.dart';
@@ -38,6 +39,12 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   }
 
   Future<void> _unlockContact(Property property) async {
+    // Check if already unlocked to prevent duplicate payments
+    if (_isContactUnlocked) {
+      _showSnackBar('Contact already unlocked!');
+      return;
+    }
+
     final success = await PaymentService.showPaymentDialog(
       context: context,
       propertyTitle: property.title,
@@ -47,7 +54,38 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         });
         // Update property unlock count
         context.read<PropertyProvider>().unlockContact(property.id);
+        _showSnackBar('Contact unlocked successfully!');
       },
+    );
+  }
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    } else {
+      _showSnackBar('Could not launch phone dialer');
+    }
+  }
+
+  Future<void> _openWhatsApp(String phoneNumber) async {
+    // Remove any formatting from phone number
+    final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
+    
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+    } else {
+      _showSnackBar('WhatsApp not installed');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
@@ -429,34 +467,79 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
               // Contact Button
               Expanded(
                 child: _isContactUnlocked
-                    ? ElevatedButton.icon(
-                        onPressed: () {
-                          // TODO: Implement call functionality
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Calling ${property.ownerPhone}...'),
+                    ? Column(
+                        children: [
+                          // Phone Number Display
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.secondaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppTheme.secondaryColor),
                             ),
-                          );
-                        },
-                        icon: Icon(Icons.phone),
-                        label: Text(property.ownerPhone),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.secondaryColor,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            child: Row(
+                              children: [
+                                Icon(Icons.phone, color: AppTheme.secondaryColor, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  property.ownerPhone,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryTextColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          // Call and WhatsApp Buttons
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => _makePhoneCall(property.ownerPhone),
+                                  icon: const Icon(Icons.call, size: 18),
+                                  label: const Text('Call'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.secondaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => _openWhatsApp(property.ownerPhone),
+                                  icon: const Icon(Icons.chat, size: 18),
+                                  label: const Text('WhatsApp'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF25D366),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       )
                     : ElevatedButton.icon(
                         onPressed: () => _unlockContact(property),
-                        icon: Icon(Icons.lock_open),
-                        label: Text('Unlock Contact - ₹10'),
+                        icon: const Icon(Icons.lock_open),
+                        label: const Text('Unlock Contact - ₹10'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

@@ -90,12 +90,33 @@ class ProfileScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: CupertinoColors.systemBlue,
               borderRadius: BorderRadius.circular(40),
+              border: Border.all(
+                color: CupertinoColors.systemGrey4,
+                width: 2,
+              ),
             ),
-            child: const Icon(
-              CupertinoIcons.person_fill,
-              size: 40,
-              color: CupertinoColors.white,
-            ),
+            child: user?.profilePicture != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(38),
+                    child: Image.network(
+                      user!.profilePicture!,
+                      width: 76,
+                      height: 76,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          CupertinoIcons.person_fill,
+                          size: 40,
+                          color: CupertinoColors.white,
+                        );
+                      },
+                    ),
+                  )
+                : const Icon(
+                    CupertinoIcons.person_fill,
+                    size: 40,
+                    color: CupertinoColors.white,
+                  ),
           ),
           const SizedBox(height: 16),
           Text(

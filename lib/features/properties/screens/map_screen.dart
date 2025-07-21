@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/models/property_model.dart';
+import '../providers/property_provider.dart';
+import '../widgets/property_card.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -9,46 +15,78 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  GoogleMapController? _mapController;
+  Set<Marker> _markers = {};
+  Property? _selectedProperty;
+  
+  // Default location (Bangalore)
+  static const CameraPosition _initialPosition = CameraPosition(
+    target: LatLng(12.9716, 77.5946),
+    zoom: 12.0,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPropertyMarkers();
+    });
+  }
+
+  void _loadPropertyMarkers() {
+    final propertyProvider = context.read<PropertyProvider>();
+    final properties = propertyProvider.properties;
+    
+    setState(() {
+      _markers = properties.map((property) {
+        return Marker(
+          markerId: MarkerId(property.id),
+          position: LatLng(
+            property.location.latitude,
+            property.location.longitude,
+          ),
+          infoWindow: InfoWindow(
+            title: property.title,
+            snippet: '₹${property.rent.toInt()}/month',
+          ),
+          onTap: () {
+            setState(() {
+              _selectedProperty = property;
+            });
+          },
+        );
+      }).toSet();
+    });
+  }
+
+  void _goToCurrentLocation() async {
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(_initialPosition),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: CupertinoColors.systemGroupedBackground,
       body: Stack(
         children: [
-          // Map placeholder - will be replaced with actual map implementation
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: CupertinoColors.systemGrey5,
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    CupertinoIcons.map,
-                    size: 80,
-                    color: CupertinoColors.systemGrey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Map View',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      color: CupertinoColors.systemGrey,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Coming Soon',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: CupertinoColors.systemGrey2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // Google Maps
+          GoogleMap(
+            initialCameraPosition: _initialPosition,
+            markers: _markers,
+            onMapCreated: (GoogleMapController controller) {
+              _mapController = controller;
+            },
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            mapToolbarEnabled: false,
+            compassEnabled: true,
+            buildingsEnabled: true,
+            trafficEnabled: false,
           ),
           
           // Search bar overlay
@@ -89,7 +127,7 @@ class _MapScreenState extends State<MapScreen> {
                   CupertinoButton(
                     padding: EdgeInsets.zero,
                     onPressed: () {
-                      // TODO: Implement filter functionality
+                      _loadPropertyMarkers();
                     },
                     child: Container(
                       width: 36,
@@ -111,8 +149,39 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           
-          // Property pins (mock data)
-          ..._buildPropertyPins(),
+          // My Location Button
+          Positioned(
+            bottom: 100,
+            right: 16,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _goToCurrentLocation,
+                  borderRadius: BorderRadius.circular(12),
+                  child: const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Icon(
+                      CupertinoIcons.location,
+                      size: 24,
+                      color: CupertinoColors.systemBlue,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
           
           // Bottom sheet handle
           Positioned(
@@ -126,50 +195,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  List<Widget> _buildPropertyPins() {
-    // Mock property locations
-    final properties = [
-      {'top': 200.0, 'left': 100.0, 'price': '₹25K'},
-      {'top': 300.0, 'left': 200.0, 'price': '₹30K'},
-      {'top': 250.0, 'left': 300.0, 'price': '₹22K'},
-      {'top': 400.0, 'left': 150.0, 'price': '₹35K'},
-      {'top': 350.0, 'left': 250.0, 'price': '₹28K'},
-    ];
-
-    return properties.map((property) {
-      return Positioned(
-        top: property['top'] as double,
-        left: property['left'] as double,
-        child: GestureDetector(
-          onTap: () {
-            // TODO: Show property details
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemBlue,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: CupertinoColors.black.withOpacity(0.2),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              property['price'] as String,
-              style: const TextStyle(
-                color: CupertinoColors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      );
-    }).toList();
-  }
 
   Widget _buildBottomSheet() {
     return Container(

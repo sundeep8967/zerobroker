@@ -51,8 +51,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _pickProfileImage() async {
     try {
+      // Show image source selection
+      final ImageSource? source = await _showImageSourceDialog();
+      if (source == null) return;
+      
       final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 80,
@@ -66,6 +70,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       _showError('Failed to pick image');
     }
+  }
+
+  Future<ImageSource?> _showImageSourceDialog() async {
+    return showCupertinoModalPopup<ImageSource>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text('Select Profile Picture'),
+        message: const Text('Choose how you want to select your profile picture'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, ImageSource.camera),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(CupertinoIcons.camera, size: 20),
+                SizedBox(width: 8),
+                Text('Take Photo'),
+              ],
+            ),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, ImageSource.gallery),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(CupertinoIcons.photo, size: 20),
+                SizedBox(width: 8),
+                Text('Choose from Gallery'),
+              ],
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
   }
 
   Future<void> _saveProfile() async {

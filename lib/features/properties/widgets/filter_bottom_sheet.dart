@@ -255,22 +255,43 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           runSpacing: 8,
           children: AppConstants.propertyTypes.map((type) {
             final isSelected = _selectedPropertyTypes.contains(type);
-            return FilterChip(
-              label: Text(type),
-              selected: isSelected,
-              onSelected: (selected) {
+            return GestureDetector(
+              onTap: () {
                 setState(() {
-                  if (selected) {
-                    _selectedPropertyTypes.add(type);
-                  } else {
+                  if (isSelected) {
                     _selectedPropertyTypes.remove(type);
+                  } else {
+                    _selectedPropertyTypes.add(type);
                   }
                 });
               },
-              selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-              checkmarkColor: AppTheme.primaryColor,
-              side: BorderSide(
-                color: isSelected ? AppTheme.primaryColor : AppTheme.borderColor,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected 
+                      ? AppTheme.primaryColor 
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: isSelected 
+                        ? AppTheme.primaryColor 
+                        : AppTheme.borderColor,
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  type,
+                  style: TextStyle(
+                    color: isSelected 
+                        ? Colors.white 
+                        : AppTheme.primaryTextColor,
+                    fontWeight: isSelected 
+                        ? FontWeight.w600 
+                        : FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             );
           }).toList(),
