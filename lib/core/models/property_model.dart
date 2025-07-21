@@ -9,6 +9,9 @@ class Property {
   final String propertyType;
   final PropertyLocation location;
   final List<String> photos;
+  
+  // Getter for backward compatibility
+  List<String> get images => photos;
   final List<String> amenities;
   final String ownerId;
   final String ownerName;
@@ -19,6 +22,9 @@ class Property {
   final bool isVerified;
   final int views;
   final int unlocks;
+  
+  // Getter for backward compatibility
+  int get viewCount => views;
   final bool isFeatured;
   final DateTime? featuredUntil;
 

@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/models/property_model.dart';
 import '../providers/property_provider.dart';
 import '../../../core/services/payment_service.dart';
+import '../../../core/services/favorites_service.dart';
 import '../widgets/enhanced_photo_gallery.dart';
 import '../widgets/report_property_dialog.dart';
 import '../widgets/property_comparison_widget.dart';
@@ -31,12 +32,37 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   late PageController _photoController;
   int _currentPhotoIndex = 0;
   bool _isContactUnlocked = false;
+  bool _isFavorite = false;
   final PropertyComparisonManager _comparisonManager = PropertyComparisonManager();
 
   @override
   void initState() {
     super.initState();
     _photoController = PageController();
+    _checkFavoriteStatus();
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    final isFavorite = FavoritesService.isFavorite(widget.propertyId);
+    setState(() {
+      _isFavorite = isFavorite;
+    });
+  }
+
+  Future<void> _toggleFavorite(Property property) async {
+    HapticFeedback.lightImpact();
+    
+    if (_isFavorite) {
+      FavoritesService.removeFromFavorites(property.id);
+      _showSnackBar('Removed from favorites');
+    } else {
+      FavoritesService.addToFavorites(property.id);
+      _showSnackBar('Added to favorites');
+    }
+    
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
   }
 
   @override
@@ -727,17 +753,10 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
-                  onPressed: () {
-                    // TODO: Implement favorite functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Added to favorites'),
-                      ),
-                    );
-                  },
+                  onPressed: () => _toggleFavorite(property),
                   icon: Icon(
-                    CupertinoIcons.heart,
-                    color: AppTheme.primaryColor,
+                    _isFavorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                    color: _isFavorite ? CupertinoColors.systemRed : AppTheme.primaryColor,
                   ),
                   padding: EdgeInsets.all(16),
                 ),

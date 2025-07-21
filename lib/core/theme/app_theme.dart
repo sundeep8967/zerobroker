@@ -183,10 +183,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      primarySwatch: _createMaterialColor(primaryColor),
       primaryColor: primaryColor,
       scaffoldBackgroundColor: darkBackgroundColor,
-      backgroundColor: darkBackgroundColor,
       cardColor: darkCardColor,
       dividerColor: darkBorderColor,
       

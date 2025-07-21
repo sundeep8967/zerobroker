@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import '../../../core/models/review_model.dart';
-import '../../../core/services/review_service.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../reviews/models/review_model.dart';
+import '../../reviews/providers/review_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 class PropertyReviewsWidget extends StatefulWidget {
   final String propertyId;
@@ -17,9 +17,14 @@ class PropertyReviewsWidget extends StatefulWidget {
 }
 
 class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
-  PropertyRating? _propertyRating;
-  List<Review> _reviews = [];
+  ReviewSummary? _reviewSummary;
+  List<PropertyReview> _reviews = [];
   bool _isLoading = true;
+  bool _isSubmitting = false;
+  
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
+  double _rating = 5.0;
 
   @override
   void initState() {
@@ -30,14 +35,21 @@ class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
   Future<void> _loadReviews() async {
     setState(() => _isLoading = true);
     
-    final rating = await ReviewService.getPropertyRating(widget.propertyId);
-    final reviews = await ReviewService.getPropertyReviews(widget.propertyId);
+    final reviewProvider = context.read<ReviewProvider>();
+    await reviewProvider.loadPropertyReviews(widget.propertyId);
     
     setState(() {
-      _propertyRating = rating;
-      _reviews = reviews;
+      _reviewSummary = reviewProvider.getPropertyReviewSummary(widget.propertyId);
+      _reviews = reviewProvider.getPropertyReviews(widget.propertyId);
       _isLoading = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _commentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -48,257 +60,156 @@ class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
       );
     }
 
-    if (_propertyRating == null || _reviews.isEmpty) {
-      return _buildNoReviewsState();
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildRatingSummary(),
-        const SizedBox(height: 20),
-        _buildReviewsList(),
+        // Reviews Header
+        _buildReviewsHeader(),
+        
+        // Reviews List
+        if (_reviews.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          ..._reviews.take(3).map((review) => _buildReviewCard(review)),
+          if (_reviews.length > 3) _buildViewAllButton(),
+        ] else
+          _buildNoReviewsState(),
+        
         const SizedBox(height: 16),
         _buildAddReviewButton(),
       ],
     );
   }
 
-  Widget _buildRatingSummary() {
+  Widget _buildReviewsHeader() {
+    final averageRating = _reviewSummary?.averageRating ?? 0.0;
+    final totalReviews = _reviewSummary?.totalReviews ?? 0;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: CupertinoColors.systemGrey.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _propertyRating!.averageRating.toStringAsFixed(1),
+                averageRating.toStringAsFixed(1),
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
+                  color: CupertinoColors.label,
                 ),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildStarRating(_propertyRating!.averageRating),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_propertyRating!.totalReviews} reviews',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < averageRating ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                    color: CupertinoColors.systemYellow,
+                    size: 16,
+                  );
+                }),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$totalReviews review${totalReviews != 1 ? 's' : ''}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: CupertinoColors.secondaryLabel,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildRatingDistribution(),
+          const Spacer(),
+          CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: _showAddReviewDialog,
+            child: const Icon(
+              CupertinoIcons.add_circled,
+              color: CupertinoColors.systemBlue,
+              size: 32,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStarRating(double rating) {
-    return Row(
-      children: List.generate(5, (index) {
-        return Icon(
-          index < rating.floor() 
-            ? CupertinoIcons.star_fill
-            : index < rating 
-              ? CupertinoIcons.star_lefthalf_fill
-              : CupertinoIcons.star,
-          color: Colors.amber,
-          size: 16,
-        );
-      }),
-    );
-  }
-
-  Widget _buildRatingDistribution() {
-    return Column(
-      children: List.generate(5, (index) {
-        int star = 5 - index;
-        int count = _propertyRating!.ratingDistribution[star] ?? 0;
-        double percentage = _propertyRating!.totalReviews > 0 
-          ? count / _propertyRating!.totalReviews 
-          : 0.0;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            children: [
-              Text('$star'),
-              const SizedBox(width: 8),
-              Icon(CupertinoIcons.star_fill, size: 12, color: Colors.amber),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: percentage,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.amber,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                count.toString(),
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildReviewsList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Reviews',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...(_reviews.take(3).map((review) => _buildReviewCard(review))),
-        if (_reviews.length > 3)
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: () => _showAllReviews(),
-            child: const Text('View all reviews'),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildReviewCard(Review review) {
+  Widget _buildReviewCard(PropertyReview review) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: CupertinoColors.systemBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: CupertinoColors.systemGrey5,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppTheme.primaryColor,
-                child: Text(
-                  review.userName.isNotEmpty ? review.userName[0].toUpperCase() : 'U',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              Text(
+                review.userName,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: CupertinoColors.label,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          review.userName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (review.isVerified) ...[
-                          const SizedBox(width: 4),
-                          const Icon(
-                            CupertinoIcons.checkmark_seal_fill,
-                            color: AppTheme.secondaryColor,
-                            size: 16,
-                          ),
-                        ],
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        _buildStarRating(review.rating),
-                        const SizedBox(width: 8),
-                        Text(
-                          _formatDate(review.createdAt),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              const Spacer(),
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < review.rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                    color: CupertinoColors.systemYellow,
+                    size: 14,
+                  );
+                }),
               ),
             ],
           ),
-          if (review.comment.isNotEmpty) ...[
-            const SizedBox(height: 12),
+          if (review.title.isNotEmpty) ...[
+            const SizedBox(height: 8),
             Text(
-              review.comment,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ],
-          if (review.photos.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 60,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: review.photos.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    width: 60,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      image: DecorationImage(
-                        image: NetworkImage(review.photos[index]),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
+              review.title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: CupertinoColors.label,
               ),
             ),
           ],
+          const SizedBox(height: 8),
+          Text(
+            review.comment,
+            style: const TextStyle(
+              fontSize: 14,
+              color: CupertinoColors.secondaryLabel,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _formatDate(review.createdAt),
+            style: const TextStyle(
+              fontSize: 12,
+              color: CupertinoColors.tertiaryLabel,
+            ),
+          ),
         ],
       ),
     );
@@ -307,33 +218,46 @@ class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
   Widget _buildNoReviewsState() {
     return Container(
       padding: const EdgeInsets.all(32),
-      child: Column(
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Column(
         children: [
           Icon(
-            CupertinoIcons.star,
-            size: 64,
-            color: Colors.grey[400],
+            CupertinoIcons.chat_bubble_text,
+            size: 48,
+            color: CupertinoColors.systemGrey,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
-            'No reviews yet',
+            'No Reviews Yet',
             style: TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+              color: CupertinoColors.label,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
-            'Be the first to review this property',
+            'Be the first to share your experience with this property.',
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.grey[500],
+              fontSize: 14,
+              color: CupertinoColors.secondaryLabel,
             ),
           ),
-          const SizedBox(height: 24),
-          _buildAddReviewButton(),
         ],
       ),
+    );
+  }
+
+  Widget _buildViewAllButton() {
+    return CupertinoButton(
+      onPressed: () {
+        // Navigate to full reviews screen
+      },
+      child: Text('View all ${_reviews.length} reviews'),
     );
   }
 
@@ -341,20 +265,8 @@ class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
     return SizedBox(
       width: double.infinity,
       child: CupertinoButton.filled(
-        onPressed: () => _showAddReviewDialog(),
+        onPressed: _showAddReviewDialog,
         child: const Text('Write a Review'),
-      ),
-    );
-  }
-
-  void _showAllReviews() {
-    // Navigate to full reviews screen
-    Navigator.of(context).push(
-      CupertinoPageRoute(
-        builder: (context) => AllReviewsScreen(
-          propertyId: widget.propertyId,
-          propertyRating: _propertyRating!,
-        ),
       ),
     );
   }
@@ -362,175 +274,115 @@ class _PropertyReviewsWidgetState extends State<PropertyReviewsWidget> {
   void _showAddReviewDialog() {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => AddReviewDialog(
-        propertyId: widget.propertyId,
-        onReviewAdded: _loadReviews,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Write a Review'),
+        message: Column(
+          children: [
+            const SizedBox(height: 16),
+            // Rating selector
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                return GestureDetector(
+                  onTap: () => setState(() => _rating = index + 1.0),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(
+                      index < _rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                      color: CupertinoColors.systemYellow,
+                      size: 32,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 16),
+            // Title input
+            CupertinoTextField(
+              controller: _titleController,
+              placeholder: 'Review title...',
+              maxLines: 1,
+            ),
+            const SizedBox(height: 12),
+            // Comment input
+            CupertinoTextField(
+              controller: _commentController,
+              placeholder: 'Share your experience...',
+              maxLines: 4,
+            ),
+          ],
+        ),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: _isSubmitting ? () {} : () => _submitReview(),
+            child: _isSubmitting 
+              ? const CupertinoActivityIndicator()
+              : const Text('Submit Review'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
       ),
     );
+  }
+
+  void _submitReview() async {
+    if (_commentController.text.trim().isEmpty) {
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final reviewProvider = context.read<ReviewProvider>();
+      
+      final review = PropertyReview(
+        id: 'review_${DateTime.now().millisecondsSinceEpoch}',
+        propertyId: widget.propertyId,
+        userId: authProvider.currentUser?.id ?? 'demo_user',
+        userName: authProvider.currentUser?.name ?? 'Demo User',
+        userAvatar: authProvider.currentUser?.profilePicture ?? '',
+        rating: _rating,
+        title: _titleController.text.trim(),
+        comment: _commentController.text.trim(),
+        createdAt: DateTime.now(),
+      );
+
+      final success = await reviewProvider.addReview(review);
+      
+      if (success && mounted) {
+        Navigator.pop(context);
+        _titleController.clear();
+        _commentController.clear();
+        _rating = 5.0;
+        _loadReviews();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
-    if (difference.inDays > 30) {
-      return '${date.day}/${date.month}/${date.year}';
-    } else if (difference.inDays > 0) {
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
       return '${difference.inDays} days ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} hours ago';
+    } else if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).floor();
+      return '$weeks week${weeks > 1 ? 's' : ''} ago';
     } else {
-      return 'Just now';
+      final months = (difference.inDays / 30).floor();
+      return '$months month${months > 1 ? 's' : ''} ago';
     }
-  }
-}
-
-// Placeholder screens - to be implemented
-class AllReviewsScreen extends StatelessWidget {
-  final String propertyId;
-  final PropertyRating propertyRating;
-
-  const AllReviewsScreen({
-    super.key,
-    required this.propertyId,
-    required this.propertyRating,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('All Reviews'),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: PropertyReviewsWidget(propertyId: propertyId),
-        ),
-      ),
-    );
-  }
-}
-
-class AddReviewDialog extends StatefulWidget {
-  final String propertyId;
-  final VoidCallback onReviewAdded;
-
-  const AddReviewDialog({
-    super.key,
-    required this.propertyId,
-    required this.onReviewAdded,
-  });
-
-  @override
-  State<AddReviewDialog> createState() => _AddReviewDialogState();
-}
-
-class _AddReviewDialogState extends State<AddReviewDialog> {
-  double _rating = 5.0;
-  final _commentController = TextEditingController();
-  bool _isSubmitting = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoActionSheet(
-      title: const Text('Write a Review'),
-      message: Column(
-        children: [
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) {
-              return GestureDetector(
-                onTap: () => setState(() => _rating = index + 1.0),
-                child: Icon(
-                  index < _rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                  color: Colors.amber,
-                  size: 32,
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 16),
-          CupertinoTextField(
-            controller: _commentController,
-            placeholder: 'Share your experience...',
-            maxLines: 3,
-            padding: const EdgeInsets.all(12),
-          ),
-        ],
-      ),
-      actions: [
-        CupertinoActionSheetAction(
-          onPressed: _isSubmitting ? null : _submitReview,
-          child: _isSubmitting 
-            ? const CupertinoActivityIndicator()
-            : const Text('Submit Review'),
-        ),
-      ],
-      cancelButton: CupertinoActionSheetAction(
-        onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Cancel'),
-      ),
-    );
-  }
-
-  Future<void> _submitReview() async {
-    setState(() => _isSubmitting = true);
-
-    final review = Review(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      propertyId: widget.propertyId,
-      userId: 'current_user_id', // TODO: Get from auth service
-      userName: 'Current User', // TODO: Get from auth service
-      rating: _rating,
-      comment: _commentController.text.trim(),
-      createdAt: DateTime.now(),
-    );
-
-    final success = await ReviewService.addReview(review);
-
-    if (mounted) {
-      Navigator.of(context).pop();
-      
-      if (success) {
-        widget.onReviewAdded();
-        // Show success message
-        showCupertinoDialog(
-          context: context,
-          builder: (context) => CupertinoAlertDialog(
-            title: const Text('Review Submitted'),
-            content: const Text('Thank you for your feedback!'),
-            actions: [
-              CupertinoDialogAction(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      } else {
-        // Show error message
-        showCupertinoDialog(
-          context: context,
-          builder: (context) => CupertinoAlertDialog(
-            title: const Text('Error'),
-            content: const Text('Failed to submit review. Please try again.'),
-            actions: [
-              CupertinoDialogAction(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
   }
 }

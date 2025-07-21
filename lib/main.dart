@@ -4,6 +4,9 @@ import 'core/theme/app_theme.dart';
 import 'core/providers/theme_provider.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/properties/providers/property_provider.dart';
+import 'features/reviews/providers/review_provider.dart';
+import 'features/referral/providers/referral_provider.dart';
+import 'features/analytics/providers/analytics_provider.dart';
 import 'core/services/favorites_service.dart';
 import 'core/navigation/app_router.dart';
 
@@ -22,6 +25,9 @@ class ZeroBrokerApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => PropertyProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
+        ChangeNotifierProvider(create: (_) => ReferralProvider()),
+        ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
       ],
       child: Consumer2<ThemeProvider, AuthProvider>(
         builder: (context, themeProvider, authProvider, _) {

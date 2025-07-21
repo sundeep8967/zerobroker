@@ -54,6 +54,17 @@ class FavoritesService {
       _notifyListeners();
     }
   }
+
+  // Remove favorite (alias for removeFromFavorites)
+  static Future<bool> removeFavorite(String propertyId) async {
+    if (_favoritePropertyIds.contains(propertyId)) {
+      _favoritePropertyIds.remove(propertyId);
+      _notifyListeners();
+      await saveFavorites();
+      return true;
+    }
+    return false;
+  }
   
   // Clear all favorites
   static void clearAllFavorites() {

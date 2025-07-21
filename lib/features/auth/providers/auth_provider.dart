@@ -123,6 +123,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> signOut() async {
+    await logout();
+  }
+
   // Update user profile
   Future<bool> updateProfile(UserModel updatedUser) async {
     try {

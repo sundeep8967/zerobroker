@@ -3,9 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../../properties/screens/favorites_screen.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../settings/screens/settings_screen.dart';
+import '../../settings/screens/advanced_settings_screen.dart';
 import '../../../core/models/user_model.dart';
 import 'edit_profile_screen.dart';
+import 'my_properties_screen.dart';
+import 'unlocked_contacts_screen.dart';
+import 'payment_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -27,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
             // Navigate to settings screen
             Navigator.of(context).push(
               CupertinoPageRoute(
-                builder: (context) => const SettingsScreen(),
+                builder: (context) => const AdvancedSettingsScreen(),
               ),
             );
           },
@@ -228,8 +231,10 @@ class ProfileScreen extends StatelessWidget {
             CupertinoIcons.house,
             () {
               // Navigate to properties list filtered by current user
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('My Properties feature coming soon!')),
+            Navigator.of(context).push(
+              CupertinoPageRoute(
+                builder: (context) => const MyPropertiesScreen(),
+              ),
             );
             },
           ),
@@ -251,8 +256,10 @@ class ProfileScreen extends StatelessWidget {
             CupertinoIcons.phone,
             () {
               // Navigate to unlocked contacts screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Unlocked Contacts feature coming soon!')),
+            Navigator.of(context).push(
+              CupertinoPageRoute(
+                builder: (context) => const UnlockedContactsScreen(),
+              ),
             );
             },
           ),
@@ -262,8 +269,10 @@ class ProfileScreen extends StatelessWidget {
             CupertinoIcons.creditcard,
             () {
               // Navigate to payment history screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Payment History feature coming soon!')),
+            Navigator.of(context).push(
+              CupertinoPageRoute(
+                builder: (context) => const PaymentHistoryScreen(),
+              ),
             );
             },
           ),

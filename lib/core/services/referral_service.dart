@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import '../models/referral_model.dart';
 
 class ReferralService {
   static const String _collectionName = 'referrals';
@@ -20,16 +21,14 @@ class ReferralService {
     final referralCode = generateReferralCode(userId);
     final referralLink = 'https://zerobroker.app/ref/$referralCode';
     
-    final message = '''
-🏠 Hey! I'm using ZeroBroker - the smartest way to find rental properties!
+    final message = '''Hey! I'm using ZeroBroker - the smartest way to find rental properties!
 
-✨ No ₹4000 broker fees - just pay ₹10 to unlock contact details
-🎁 Use my referral code: $referralCode and get 1 FREE contact unlock!
+No Rs.4000 broker fees - just pay Rs.10 to unlock contact details
+Use my referral code: $referralCode and get 1 FREE contact unlock!
 
 Download now: $referralLink
 
-- $userName
-''';
+- $userName''';
     
     await Share.share(message, subject: 'Join ZeroBroker with my referral!');
   }
@@ -100,7 +99,7 @@ Download now: $referralLink
   }
   
   // Get user's referral stats
-  static Future<ReferralStats> getUserReferralStats(String userId) async {
+  static Future<UserReferralStats> getUserReferralStats(String userId) async {
     try {
       final firestore = FirebaseFirestore.instance;
       
@@ -121,22 +120,104 @@ Download now: $referralLink
         return createdAt != null && createdAt.isAfter(thirtyDaysAgo);
       }).length;
       
-      return ReferralStats(
+      return UserReferralStats(
+        userId: userId,
+        personalReferralCode: generateReferralCode(userId),
         totalReferrals: totalReferrals,
-        totalCreditsEarned: totalEarned,
-        recentReferrals: recentReferrals,
-        referralCode: generateReferralCode(userId),
+        successfulReferrals: totalReferrals,
+        totalRewardsEarned: totalEarned,
+        availableFreeUnlocks: totalEarned,
+        lastReferralDate: referralsQuery.docs.isNotEmpty 
+            ? (referralsQuery.docs.last.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now()
+            : DateTime.now(),
       );
       
     } catch (e) {
       debugPrint('Error getting referral stats: $e');
-      return ReferralStats(
+      return UserReferralStats(
+        userId: userId,
+        personalReferralCode: generateReferralCode(userId),
         totalReferrals: 0,
-        totalCreditsEarned: 0,
-        recentReferrals: 0,
-        referralCode: generateReferralCode(userId),
+        successfulReferrals: 0,
+        totalRewardsEarned: 0,
+        availableFreeUnlocks: 0,
+        lastReferralDate: DateTime.now(),
       );
     }
+  }
+  
+  // Get user's referrals
+  static Future<List<Referral>> getUserReferrals(String userId) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      
+      final referralsQuery = await firestore
+          .collection(_collectionName)
+          .where('referrerId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      return referralsQuery.docs.map((doc) => Referral.fromFirestore(doc)).toList();
+      
+    } catch (e) {
+      debugPrint('Error getting user referrals: $e');
+      return [];
+    }
+  }
+  
+  // Validate referral code format
+  static bool isValidReferralCode(String code) {
+    // ZeroBroker referral codes are 6 characters: ZB + 4 digits
+    final regex = RegExp(r'^ZB\d{4}$');
+    return regex.hasMatch(code);
+  }
+
+  // Process referral code
+  static Future<bool> processReferral(String userId, String referralCode) async {
+    return await applyReferralCode(userId, referralCode);
+  }
+  
+  // Use free unlock
+  static Future<bool> useFreeUnlock(String userId) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final userRef = firestore.collection('users').doc(userId);
+      
+      // Get current user data
+      final userDoc = await userRef.get();
+      if (!userDoc.exists) return false;
+      
+      final userData = userDoc.data() as Map<String, dynamic>;
+      final currentUnlocks = userData['freeUnlocks'] ?? 0;
+      
+      if (currentUnlocks <= 0) return false;
+      
+      // Decrement free unlocks
+      await userRef.update({
+        'freeUnlocks': FieldValue.increment(-1),
+      });
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error using free unlock: $e');
+      return false;
+    }
+  }
+  
+  // Share referral code
+  static Future<void> shareReferralCode(String referralCode, String userName) async {
+    final referralLink = 'https://zerobroker.app/ref/$referralCode';
+    
+    final message = '''Hey! I'm using ZeroBroker - the smartest way to find rental properties!
+
+No Rs.4000 broker fees - just pay Rs.10 to unlock contact details
+Use my referral code: $referralCode and get 1 FREE contact unlock!
+
+Download now: $referralLink
+
+- $userName''';
+    
+    await Share.share(message, subject: 'Join ZeroBroker with my referral!');
   }
   
   // Get leaderboard of top referrers
