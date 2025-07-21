@@ -200,10 +200,10 @@
   - [x] Unlock records are read-only
   - [x] Admin-only collections
 
-- [ ] **Cloud Functions**
-  - [ ] Payment verification
-  - [ ] Send notifications
-  - [ ] Auto-expire old listings
+- [x] **Cloud Functions**
+  - [x] Payment verification
+  - [x] Send notifications
+  - [x] Auto-expire old listings
 
 ### 3.2 Admin Panel (Web App)
 - [x] **Admin Authentication**
