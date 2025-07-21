@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/animated_widgets.dart';
@@ -29,23 +31,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   final List<BottomNavigationBarItem> _navItems = [
     const BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(Icons.home),
+      icon: Icon(CupertinoIcons.house),
+      activeIcon: Icon(CupertinoIcons.house_fill),
       label: 'Home',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(Icons.map_outlined),
-      activeIcon: Icon(Icons.map),
+      icon: Icon(CupertinoIcons.map),
+      activeIcon: Icon(CupertinoIcons.map_fill),
       label: 'Map',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(Icons.add_circle_outline),
-      activeIcon: Icon(Icons.add_circle),
+      icon: Icon(CupertinoIcons.add_circled),
+      activeIcon: Icon(CupertinoIcons.add_circled_solid),
       label: 'Add Property',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      activeIcon: Icon(Icons.person),
+      icon: Icon(CupertinoIcons.person),
+      activeIcon: Icon(CupertinoIcons.person_fill),
       label: 'Profile',
     ),
   ];
@@ -73,11 +75,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   void _onTabTapped(int index) {
+    // Add haptic feedback for iOS-style interaction
+    HapticFeedback.lightImpact();
+    
     setState(() => _currentIndex = index);
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      curve: Curves.elasticOut, // iOS-style spring animation
     );
     
     // Animate FAB based on selected tab
@@ -93,6 +98,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: PageView(
         controller: _pageController,
+        physics: const BouncingScrollPhysics(), // iOS-style scroll physics
         onPageChanged: (index) {
           setState(() => _currentIndex = index);
           if (index == 2) {
@@ -104,84 +110,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         children: _screens,
       ),
       
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Container(
-            height: 70,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(_navItems.length, (index) {
-                final isSelected = _currentIndex == index;
-                return GestureDetector(
-                  onTap: () => _onTabTapped(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                          ? AppTheme.primaryColor.withOpacity(0.1)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            isSelected 
-                                ? (_navItems[index].activeIcon as Icon).icon
-                                : (_navItems[index].icon as Icon).icon,
-                            key: ValueKey(isSelected),
-                            color: isSelected 
-                                ? AppTheme.primaryColor
-                                : AppTheme.secondaryTextColor,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected 
-                                ? FontWeight.w600 
-                                : FontWeight.w400,
-                            color: isSelected 
-                                ? AppTheme.primaryColor
-                                : AppTheme.secondaryTextColor,
-                          ),
-                          child: Text(_navItems[index].label!),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
+      bottomNavigationBar: CupertinoTabBar(
+        backgroundColor: CupertinoColors.systemBackground,
+        border: const Border(
+          top: BorderSide(
+            color: CupertinoColors.systemGrey4,
+            width: 0.5,
           ),
         ),
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        type: BottomNavigationBarType.fixed,
+        items: _navItems.map((item) {
+          return BottomNavigationBarItem(
+            icon: item.icon,
+            activeIcon: item.activeIcon,
+            label: item.label,
+          );
+        }).toList(),
+        activeColor: AppTheme.primaryColor,
+        inactiveColor: AppTheme.secondaryTextColor,
       ),
       
       // Floating Action Button for quick add property
       floatingActionButton: _currentIndex != 2 
           ? AnimatedFAB(
               onPressed: () => _onTabTapped(2),
-              icon: Icons.add,
+              icon: CupertinoIcons.add,
               tooltip: 'Add Property',
             )
           : null,

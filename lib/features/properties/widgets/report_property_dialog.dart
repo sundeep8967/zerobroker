@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -79,7 +80,10 @@ class _ReportPropertyDialogState extends State<ReportPropertyDialog> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.pop(context);
+                    },
                     icon: const Icon(CupertinoIcons.xmark),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.white,

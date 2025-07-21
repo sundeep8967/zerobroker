@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:animate_do/animate_do.dart';
 import '../theme/app_theme.dart';
 
@@ -48,6 +50,7 @@ class _AnimatedPropertyCardState extends State<AnimatedPropertyCard>
   }
 
   void _onTapDown(TapDownDetails details) {
+    HapticFeedback.lightImpact(); // iOS-style haptic feedback
     setState(() => _isPressed = true);
     _controller.forward();
   }

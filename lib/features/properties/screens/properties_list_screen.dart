@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_theme.dart';
@@ -329,26 +331,37 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
     final itemCount = propertyProvider.properties.length + 
         (propertyProvider.hasMoreData ? 1 : 0); // Add 1 for loading indicator
     
-    return RefreshIndicator(
-      onRefresh: () => propertyProvider.initializeProperties(),
-      color: AppTheme.primaryColor,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: itemCount,
-        itemBuilder: (context, index) {
-          // Show loading indicator at the bottom
-          if (index == propertyProvider.properties.length) {
-            return _buildLoadingMoreIndicator(propertyProvider);
-          }
-          
-          final property = propertyProvider.properties[index];
-          return animated.AnimatedPropertyCard(
-            property: property,
-            index: index,
-          );
-        },
-      ),
+    return CustomScrollView(
+      controller: _scrollController,
+      physics: const BouncingScrollPhysics(), // iOS-style scroll physics
+      slivers: [
+        CupertinoSliverRefreshControl(
+          onRefresh: () async {
+            HapticFeedback.lightImpact();
+            await propertyProvider.initializeProperties();
+          },
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                // Show loading indicator at the bottom
+                if (index == propertyProvider.properties.length) {
+                  return _buildLoadingMoreIndicator(propertyProvider);
+                }
+                
+                final property = propertyProvider.properties[index];
+                return animated.AnimatedPropertyCard(
+                  property: property,
+                  index: index,
+                );
+              },
+              childCount: itemCount,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -361,7 +374,7 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
         child: propertyProvider.isLoadingMore
             ? Column(
                 children: [
-                  const CircularProgressIndicator(),
+                  const CupertinoActivityIndicator(radius: 12),
                   const SizedBox(height: 8),
                   Text(
                     'Loading more properties...',

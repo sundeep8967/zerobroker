@@ -177,7 +177,10 @@ class AppAnimations {
   static const Duration medium = Duration(milliseconds: 300);
   static const Duration slow = Duration(milliseconds: 500);
   
-  // Custom Curves
+  // iOS-style Animation Curves
+  static const Curve springCurve = Curves.elasticOut;
+  static const Curve bounceCurve = Curves.bounceOut;
+  static const Curve easeCurve = Curves.easeInOutCubic;
   static const Curve easeInOutCupertino = Curves.easeInOut;
   static const Curve bounceIn = Curves.elasticOut;
 }

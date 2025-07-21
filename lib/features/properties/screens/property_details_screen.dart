@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
@@ -43,6 +45,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   }
 
   Future<void> _unlockContact(Property property) async {
+    // Add haptic feedback for iOS-style interaction
+    HapticFeedback.mediumImpact();
+    
     // Check if already unlocked to prevent duplicate payments
     if (_isContactUnlocked) {
       _showSnackBar('Contact already unlocked!');
@@ -94,6 +99,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   }
 
   void _toggleComparison(Property property) {
+    // Add haptic feedback for iOS-style interaction
+    HapticFeedback.lightImpact();
+    
     if (_comparisonManager.isInComparison(property.id)) {
       _comparisonManager.removeFromComparison(property.id);
       _showSnackBar('Removed from comparison');
@@ -134,7 +142,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.error_outline,
+                CupertinoIcons.exclamationmark_triangle,
                 size: 64,
                 color: AppTheme.secondaryTextColor,
               ),
@@ -163,18 +171,41 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
     return Scaffold(
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(), // iOS-style scroll physics
         slivers: [
-          // Photo Gallery App Bar
+          // Photo Gallery App Bar with iOS-style navigation
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
+            leading: CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                context.pop();
+              },
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  CupertinoIcons.back,
+                  color: Colors.black,
+                  size: 20,
+                ),
+              ),
+            ),
             actions: [
               // Comparison button
-              IconButton(
+              CupertinoButton(
+                padding: EdgeInsets.zero,
                 onPressed: () => _toggleComparison(property),
-                icon: Container(
+                child: Container(
+                  margin: const EdgeInsets.all(8),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.9),
@@ -182,24 +213,31 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   ),
                   child: Icon(
                     _comparisonManager.isInComparison(property.id)
-                        ? Icons.compare_arrows
-                        : Icons.compare_arrows_outlined,
+                        ? CupertinoIcons.arrow_right_arrow_left
+                        : CupertinoIcons.arrow_right_arrow_left,
                     color: _comparisonManager.isInComparison(property.id)
                         ? AppTheme.primaryColor
                         : Colors.black,
+                    size: 20,
                   ),
                 ),
               ),
               // Report button
-              IconButton(
+              CupertinoButton(
+                padding: EdgeInsets.zero,
                 onPressed: () => _showReportDialog(property),
-                icon: Container(
+                child: Container(
+                  margin: const EdgeInsets.all(8),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.9),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.flag_outlined, color: Colors.black),
+                  child: const Icon(
+                    CupertinoIcons.flag,
+                    color: Colors.black,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -271,8 +309,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         children: List.generate(
                           property.photos.length,
                           (index) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
+                            duration: AppAnimations.medium,
+                            curve: AppAnimations.springCurve, // iOS-style spring animation
                             margin: EdgeInsets.symmetric(horizontal: 4),
                             width: _currentPhotoIndex == index ? 12 : 8,
                             height: 8,
@@ -312,7 +350,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.photo_library,
+                                CupertinoIcons.photo_on_rectangle,
                                 color: Colors.white,
                                 size: 16,
                               ),
@@ -347,7 +385,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.verified,
+                                CupertinoIcons.checkmark_seal_fill,
                                 color: Colors.white,
                                 size: 16,
                               ),
@@ -397,7 +435,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               Row(
                                 children: [
                                   Icon(
-                                    Icons.location_on_outlined,
+                                    CupertinoIcons.location,
                                     size: 16,
                                     color: AppTheme.secondaryTextColor,
                                   ),
@@ -445,17 +483,17 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     child: Row(
                       children: [
                         _buildStatCard(
-                          icon: Icons.home_outlined,
+                          icon: CupertinoIcons.house,
                           label: property.propertyType,
                         ),
                         SizedBox(width: 12),
                         _buildStatCard(
-                          icon: Icons.visibility_outlined,
+                          icon: CupertinoIcons.eye,
                           label: '${property.views} views',
                         ),
                         SizedBox(width: 12),
                         _buildStatCard(
-                          icon: Icons.phone_outlined,
+                          icon: CupertinoIcons.phone,
                           label: '${property.unlocks} unlocks',
                         ),
                       ],
@@ -546,7 +584,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         child: Row(
                           children: [
                             Icon(
-                              Icons.account_balance_wallet_outlined,
+                              CupertinoIcons.creditcard,
                               color: AppTheme.primaryColor,
                             ),
                             SizedBox(width: 12),
@@ -612,7 +650,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.phone, color: AppTheme.secondaryColor, size: 20),
+                                Icon(CupertinoIcons.phone_fill, color: AppTheme.secondaryColor, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
                                   property.ownerPhone,
@@ -632,7 +670,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () => _makePhoneCall(property.ownerPhone),
-                                  icon: const Icon(Icons.call, size: 18),
+                                  icon: const Icon(CupertinoIcons.phone_fill, size: 18),
                                   label: const Text('Call'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppTheme.secondaryColor,
@@ -648,7 +686,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () => _openWhatsApp(property.ownerPhone),
-                                  icon: const Icon(Icons.chat, size: 18),
+                                  icon: const Icon(CupertinoIcons.chat_bubble_fill, size: 18),
                                   label: const Text('WhatsApp'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF25D366),
@@ -666,7 +704,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       )
                     : ElevatedButton.icon(
                         onPressed: () => _unlockContact(property),
-                        icon: const Icon(Icons.lock_open),
+                        icon: const Icon(CupertinoIcons.lock_open),
                         label: const Text('Unlock Contact - ₹10'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
@@ -697,7 +735,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     );
                   },
                   icon: Icon(
-                    Icons.favorite_border,
+                    CupertinoIcons.heart,
                     color: AppTheme.primaryColor,
                   ),
                   padding: EdgeInsets.all(16),

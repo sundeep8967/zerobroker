@@ -12,39 +12,50 @@ class ComparisonScreen extends StatelessWidget {
     
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Property Comparison'),
+      appBar: CupertinoNavigationBar(
+        middle: const Text('Property Comparison'),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          if (comparisonManager.count > 0)
-            TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Clear Comparison'),
-                    content: const Text('Are you sure you want to remove all properties from comparison?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          comparisonManager.clearComparison();
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Clear All'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              child: const Text('Clear All'),
-            ),
-        ],
+        border: null,
+        leading: CupertinoNavigationBarBackButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            Navigator.pop(context);
+          },
+        ),
+        trailing: comparisonManager.count > 0
+            ? CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  showCupertinoDialog(
+                    context: context,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: const Text('Clear Comparison'),
+                      content: const Text('Are you sure you want to remove all properties from comparison?'),
+                      actions: [
+                        CupertinoDialogAction(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        CupertinoDialogAction(
+                          isDestructiveAction: true,
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            comparisonManager.clearComparison();
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Clear All'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Clear All'),
+              )
+            : null,
       ),
       body: AnimatedBuilder(
         animation: comparisonManager,
