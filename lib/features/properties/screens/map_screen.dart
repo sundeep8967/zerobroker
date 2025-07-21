@@ -18,6 +18,7 @@ class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
   Property? _selectedProperty;
+  Map<String, dynamic> _filters = {};
   
   // Default location (Bangalore)
   static const CameraPosition _initialPosition = CameraPosition(
@@ -65,6 +66,59 @@ class _MapScreenState extends State<MapScreen> {
         CameraUpdate.newCameraPosition(_initialPosition),
       );
     }
+  }
+
+  List<Property> _applyFiltersToProperties(List<Property> properties) {
+    if (_filters.isEmpty) return properties;
+
+    return properties.where((property) {
+      // Price range filter
+      if (_filters['minRent'] != null && property.rent < _filters['minRent']) {
+        return false;
+      }
+      if (_filters['maxRent'] != null && property.rent > _filters['maxRent']) {
+        return false;
+      }
+
+      // Property type filter
+      if (_filters['propertyType'] != null && 
+          property.propertyType != _filters['propertyType']) {
+        return false;
+      }
+
+      // Verified only filter
+      if (_filters['verifiedOnly'] == true && !property.isVerified) {
+        return false;
+      }
+
+      // Amenities filter
+      if (_filters['amenities'] != null && _filters['amenities'].isNotEmpty) {
+        final requiredAmenities = List<String>.from(_filters['amenities']);
+        final hasAllAmenities = requiredAmenities.every(
+          (amenity) => property.amenities.contains(amenity),
+        );
+        if (!hasAllAmenities) return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  void _showFilters() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => MapFiltersBottomSheet(
+        currentFilters: _filters,
+        onFiltersApplied: (filters) {
+          setState(() {
+            _filters = filters;
+          });
+          _loadPropertyMarkers();
+        },
+      ),
+    );
   }
 
   @override

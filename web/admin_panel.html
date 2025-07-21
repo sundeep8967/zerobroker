@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroBroker Admin Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #007AFF;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 80px;
+            width: 250px;
+            height: calc(100vh - 80px);
+            background: white;
+            border-right: 1px solid #e5e5e7;
+            padding: 2rem 0;
+        }
+        
+        .sidebar-item {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .sidebar-item:hover {
+            background-color: #f5f5f7;
+        }
+        
+        .sidebar-item.active {
+            background-color: #007AFF;
+            color: white;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #007AFF;
+        }
+        
+        .stat-label {
+            color: #86868b;
+            margin-top: 0.5rem;
+        }
+        
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        
+        .table th {
+            background-color: #f5f5f7;
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #007AFF;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #34C759;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #FF3B30;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+        }
+        
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 400px;
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">ZeroBroker Admin</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="hidden">
+        <header class="header">
+            <div class="logo">ZeroBroker Admin</div>
+            <div class="user-info">
+                <span id="adminName">Admin User</span>
+                <button class="btn btn-danger" onclick="signOut()">Sign Out</button>
+            </div>
+        </header>
+
+        <nav class="sidebar">
+            <div class="sidebar-item active" onclick="showSection('dashboard')">Dashboard</div>
+            <div class="sidebar-item" onclick="showSection('properties')">Properties</div>
+            <div class="sidebar-item" onclick="showSection('users')">Users</div>
+            <div class="sidebar-item" onclick="showSection('payments')">Payments</div>
+            <div class="sidebar-item" onclick="showSection('reports')">Reports</div>
+            <div class="sidebar-item" onclick="showSection('analytics')">Analytics</div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="content-section">
+                <h2>Dashboard Overview</h2>
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalProperties">0</div>
+                        <div class="stat-label">Total Properties</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUnlocks">0</div>
+                        <div class="stat-label">Contact Unlocks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalRevenue">₹0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Properties Section -->
+            <div id="propertiesSection" class="content-section hidden">
+                <h2>Property Management</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Owner</th>
+                            <th>Rent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="propertiesTable">
+                        <!-- Properties will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Users Section -->
+            <div id="usersSection" class="content-section hidden">
+                <h2>User Management</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Other sections... -->
+        </main>
+    </div>
+
+    <script>
+        // Firebase configuration (use your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDemo-WebApiKey-ForDevelopment",
+            authDomain: "zerobroker-demo.firebaseapp.com",
+            projectId: "zerobroker-demo",
+            storageBucket: "zerobroker-demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                showAdminDashboard();
+                loadDashboardData();
+            } else {
+                showLoginScreen();
+            }
+        });
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
+        });
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+        }
+
+        function signOut() {
+            auth.signOut();
+        }
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Remove active class from all sidebar items
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.remove('hidden');
+            
+            // Add active class to clicked sidebar item
+            event.target.classList.add('active');
+            
+            // Load section data
+            if (sectionName === 'properties') {
+                loadProperties();
+            } else if (sectionName === 'users') {
+                loadUsers();
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Load analytics data
+                const propertiesSnapshot = await db.collection('properties').get();
+                const usersSnapshot = await db.collection('users').get();
+                const unlocksSnapshot = await db.collection('unlocks').get();
+
+                document.getElementById('totalProperties').textContent = propertiesSnapshot.size;
+                document.getElementById('totalUsers').textContent = usersSnapshot.size;
+                document.getElementById('totalUnlocks').textContent = unlocksSnapshot.size;
+
+                // Calculate total revenue
+                let totalRevenue = 0;
+                unlocksSnapshot.forEach(doc => {
+                    totalRevenue += doc.data().amount || 0;
+                });
+                document.getElementById('totalRevenue').textContent = '₹' + totalRevenue;
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadProperties() {
+            try {
+                const snapshot = await db.collection('properties').limit(50).get();
+                const tableBody = document.getElementById('propertiesTable');
+                tableBody.innerHTML = '';
+
+                snapshot.forEach(doc => {
+                    const property = doc.data();
+                    const row = `
+                        <tr>
+                            <td>${property.title}</td>
+                            <td>${property.ownerName || 'N/A'}</td>
+                            <td>₹${property.rent}</td>
+                            <td>${property.isActive ? 'Active' : 'Inactive'}</td>
+                            <td>
+                                <button class="btn btn-success" onclick="verifyProperty('${doc.id}')">Verify</button>
+                                <button class="btn btn-danger" onclick="deleteProperty('${doc.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Error loading properties:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const snapshot = await db.collection('users').limit(50).get();
+                const tableBody = document.getElementById('usersTable');
+                tableBody.innerHTML = '';
+
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    const row = `
+                        <tr>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.phone}</td>
+                            <td>${new Date(user.createdAt?.toDate()).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="blockUser('${doc.id}')">Block</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        async function verifyProperty(propertyId) {
+            try {
+                await db.collection('properties').doc(propertyId).update({
+                    isVerified: true
+                });
+                loadProperties(); // Reload the table
+                alert('Property verified successfully!');
+            } catch (error) {
+                alert('Error verifying property: ' + error.message);
+            }
+        }
+
+        async function deleteProperty(propertyId) {
+            if (confirm('Are you sure you want to delete this property?')) {
+                try {
+                    await db.collection('properties').doc(propertyId).update({
+                        isActive: false,
+                        deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    loadProperties(); // Reload the table
+                    alert('Property deleted successfully!');
+                } catch (error) {
+                    alert('Error deleting property: ' + error.message);
+                }
+            }
+        }
+
+        async function blockUser(userId) {
+            if (confirm('Are you sure you want to block this user?')) {
+                try {
+                    await db.collection('users').doc(userId).update({
+                        isActive: false,
+                        blockedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    loadUsers(); // Reload the table
+                    alert('User blocked successfully!');
+                } catch (error) {
+                    alert('Error blocking user: ' + error.message);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

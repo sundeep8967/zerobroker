@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      // Users can read and write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Admin can read all users
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Properties collection
+    match /properties/{propertyId} {
+      // Anyone can read active properties
+      allow read: if resource.data.isActive == true;
+      
+      // Property owners can read/write their own properties
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.ownerId;
+      
+      // Authenticated users can create properties
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.ownerId &&
+        request.resource.data.keys().hasAll(['title', 'description', 'rent', 'location', 'ownerId']) &&
+        request.resource.data.isActive == true;
+      
+      // Admin can read/write all properties
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Unlocks collection
+    match /unlocks/{unlockId} {
+      // Users can read their own unlocks
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Only system can create unlock records (via Cloud Functions)
+      allow create: if false; // Handled by Cloud Functions only
+      
+      // Admin can read all unlocks
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Reports collection
+    match /reports/{reportId} {
+      // Users can create reports
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        request.resource.data.keys().hasAll(['propertyId', 'userId', 'reason']);
+      
+      // Users can read their own reports
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Admin can read/write all reports
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Admin collection (for admin role checking)
+    match /admins/{adminId} {
+      // Only existing admins can read admin collection
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Favorites collection (user's favorite properties)
+    match /favorites/{userId} {
+      // Users can read/write their own favorites
+      allow read, write: if request.auth != null && 
+        request.auth.uid == userId;
+    }
+    
+    // Analytics collection (read-only for admin)
+    match /analytics/{document=**} {
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+  }
+}

@@ -68,10 +68,9 @@ class _AnimatedPropertyCardState extends State<AnimatedPropertyCard>
     _checkFavoriteStatus();
   }
 
-  void _checkFavoriteStatus() async {
-    final favorites = await FavoritesService.getFavorites();
+  void _checkFavoriteStatus() {
     setState(() {
-      _isFavorite = favorites.any((fav) => fav.id == widget.property.id);
+      _isFavorite = FavoritesService.isFavorite(widget.property.id);
     });
   }
 
@@ -103,15 +102,11 @@ class _AnimatedPropertyCardState extends State<AnimatedPropertyCard>
     _scaleController.reverse();
   }
 
-  void _toggleFavorite() async {
-    if (_isFavorite) {
-      FavoritesService.removeFavorite(widget.property.id);
-    } else {
-      FavoritesService.addToFavorites(widget.property.id);
-    }
+  void _toggleFavorite() {
+    final isNowFavorite = FavoritesService.toggleFavorite(widget.property.id);
     
     setState(() {
-      _isFavorite = !_isFavorite;
+      _isFavorite = isNowFavorite;
     });
     
     _favoriteController.forward().then((_) {
