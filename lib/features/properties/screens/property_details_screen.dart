@@ -13,6 +13,7 @@ import '../../../core/services/payment_service.dart';
 import '../widgets/enhanced_photo_gallery.dart';
 import '../widgets/report_property_dialog.dart';
 import '../widgets/property_comparison_widget.dart';
+import '../widgets/property_reviews_widget.dart';
 
 class PropertyDetailsScreen extends StatefulWidget {
   final String propertyId;

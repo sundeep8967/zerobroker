@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../../properties/screens/favorites_screen.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../settings/screens/settings_screen.dart';
 import '../../../core/models/user_model.dart';
 import 'edit_profile_screen.dart';
 
@@ -24,8 +25,10 @@ class ProfileScreen extends StatelessWidget {
           padding: EdgeInsets.zero,
           onPressed: () {
             // Navigate to settings screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Settings feature coming soon!')),
+            Navigator.of(context).push(
+              CupertinoPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
             );
           },
           child: const Icon(CupertinoIcons.settings),

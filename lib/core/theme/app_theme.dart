@@ -18,9 +18,18 @@ class AppTheme {
   static const Color borderColor = Color(0xFFE5E5EA);
   static const Color separatorColor = Color(0xFFC6C6C8);
 
+  // Dark Mode Colors
+  static const Color darkBackgroundColor = Color(0xFF000000);
+  static const Color darkSurfaceColor = Color(0xFF1C1C1E);
+  static const Color darkCardColor = Color(0xFF2C2C2E);
+  static const Color darkPrimaryTextColor = Color(0xFFFFFFFF);
+  static const Color darkSecondaryTextColor = Color(0xFF8E8E93);
+  static const Color darkBorderColor = Color(0xFF38383A);
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: Brightness.light,
@@ -166,6 +175,177 @@ class AppTheme {
         unselectedItemColor: secondaryTextColor,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primarySwatch: _createMaterialColor(primaryColor),
+      primaryColor: primaryColor,
+      scaffoldBackgroundColor: darkBackgroundColor,
+      backgroundColor: darkBackgroundColor,
+      cardColor: darkCardColor,
+      dividerColor: darkBorderColor,
+      
+      // AppBar Theme
+      appBarTheme: const AppBarTheme(
+        backgroundColor: darkSurfaceColor,
+        foregroundColor: darkPrimaryTextColor,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: darkPrimaryTextColor,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+        iconTheme: IconThemeData(color: primaryColor),
+      ),
+      
+      // Text Theme
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.bold),
+        displayMedium: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.bold),
+        displaySmall: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.bold),
+        headlineLarge: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.w600),
+        headlineMedium: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.w600),
+        headlineSmall: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.w600),
+        titleLarge: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.w600),
+        titleMedium: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.w500),
+        titleSmall: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.w500),
+        bodyLarge: TextStyle(color: darkPrimaryTextColor),
+        bodyMedium: TextStyle(color: darkPrimaryTextColor),
+        bodySmall: TextStyle(color: darkSecondaryTextColor),
+        labelLarge: TextStyle(color: darkPrimaryTextColor, fontWeight: FontWeight.w500),
+        labelMedium: TextStyle(color: darkSecondaryTextColor),
+        labelSmall: TextStyle(color: darkSecondaryTextColor),
+      ),
+      
+      // Card Theme
+      cardTheme: CardTheme(
+        color: darkCardColor,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shadowColor: Colors.black.withValues(alpha: 0.3),
+      ),
+      
+      // Input Decoration Theme
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurfaceColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
+        ),
+        labelStyle: const TextStyle(color: darkSecondaryTextColor),
+        hintStyle: const TextStyle(color: darkSecondaryTextColor),
+      ),
+      
+      // Elevated Button Theme
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.black.withValues(alpha: 0.3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      
+      // Bottom Navigation Bar Theme
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: darkSurfaceColor,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: darkSecondaryTextColor,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+      
+      // Icon Theme
+      iconTheme: const IconThemeData(color: darkPrimaryTextColor),
+      primaryIconTheme: const IconThemeData(color: primaryColor),
+      
+      // Floating Action Button Theme
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 4,
+      ),
+      
+      // Switch Theme
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return darkSecondaryTextColor;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return primaryColor;
+          }
+          return darkBorderColor;
+        }),
+      ),
+      
+      // Checkbox Theme
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return primaryColor;
+          }
+          return Colors.transparent;
+        }),
+        checkColor: WidgetStateProperty.all(Colors.white),
+        side: const BorderSide(color: darkBorderColor),
+      ),
+      
+      // Dialog Theme
+      dialogTheme: DialogTheme(
+        backgroundColor: darkSurfaceColor,
+        titleTextStyle: const TextStyle(
+          color: darkPrimaryTextColor,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        contentTextStyle: const TextStyle(
+          color: darkPrimaryTextColor,
+          fontSize: 16,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      
+      // Snackbar Theme
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: darkCardColor,
+        contentTextStyle: const TextStyle(color: darkPrimaryTextColor),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        behavior: SnackBarBehavior.floating,
+      ),
+      
+      colorScheme: const ColorScheme.dark(
+        primary: primaryColor,
+        secondary: secondaryColor,
+        surface: darkSurfaceColor,
+        background: darkBackgroundColor,
+        error: errorColor,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: darkPrimaryTextColor,
+        onBackground: darkPrimaryTextColor,
+        onError: Colors.white,
       ),
     );
   }
