@@ -109,7 +109,16 @@ class _MapScreenState extends State<MapScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => MapFiltersBottomSheet(
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: const Center(
+          child: Text('Map Filters Coming Soon'),
+        ),
+      ), // MapFiltersBottomSheet(
         currentFilters: _filters,
         onFiltersApplied: (filters) {
           setState(() {

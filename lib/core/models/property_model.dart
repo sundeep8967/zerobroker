@@ -101,6 +101,44 @@ class Property {
     };
   }
 
+  // Alias methods for compatibility
+  Map<String, dynamic> toJson() => toFirestore();
+  
+  factory Property.fromJson(Map<String, dynamic> json) {
+    return Property(
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      rent: (json['rent'] ?? 0).toDouble(),
+      deposit: json['deposit']?.toDouble(),
+      propertyType: json['propertyType'] ?? '',
+      location: PropertyLocation.fromMap(json['location'] ?? {}),
+      photos: List<String>.from(json['photos'] ?? []),
+      amenities: List<String>.from(json['amenities'] ?? []),
+      ownerId: json['ownerId'] ?? '',
+      ownerName: json['ownerName'] ?? '',
+      ownerPhone: json['ownerPhone'] ?? '',
+      createdAt: json['createdAt'] is Timestamp 
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      updatedAt: json['updatedAt'] != null 
+          ? (json['updatedAt'] is Timestamp 
+              ? (json['updatedAt'] as Timestamp).toDate()
+              : DateTime.parse(json['updatedAt']))
+          : null,
+      isActive: json['isActive'] ?? true,
+      isVerified: json['isVerified'] ?? false,
+      views: json['views'] ?? 0,
+      unlocks: json['unlocks'] ?? 0,
+      isFeatured: json['isFeatured'] ?? false,
+      featuredUntil: json['featuredUntil'] != null 
+          ? (json['featuredUntil'] is Timestamp 
+              ? (json['featuredUntil'] as Timestamp).toDate()
+              : DateTime.parse(json['featuredUntil']))
+          : null,
+    );
+  }
+
   // Copy with method for updates
   Property copyWith({
     String? title,

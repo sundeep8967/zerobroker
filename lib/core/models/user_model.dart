@@ -72,6 +72,36 @@ class UserModel {
     };
   }
 
+  // Alias methods for compatibility
+  Map<String, dynamic> toJson() => toFirestore();
+  
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phone'],
+      profilePicture: json['profilePicture'],
+      createdAt: json['createdAt'] is Timestamp 
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      updatedAt: json['updatedAt'] != null 
+          ? (json['updatedAt'] is Timestamp 
+              ? (json['updatedAt'] as Timestamp).toDate()
+              : DateTime.parse(json['updatedAt']))
+          : null,
+      isActive: json['isActive'] ?? true,
+      preferences: UserPreferences.fromMap(json['preferences'] ?? {}),
+      unlockedProperties: List<String>.from(json['unlockedProperties'] ?? []),
+      walletBalance: (json['walletBalance'] ?? 0.0).toDouble(),
+      totalUnlocks: json['totalUnlocks'] ?? 0,
+      userType: UserType.values.firstWhere(
+        (type) => type.name == json['userType'],
+        orElse: () => UserType.tenant,
+      ),
+    );
+  }
+
   UserModel copyWith({
     String? name,
     String? email,

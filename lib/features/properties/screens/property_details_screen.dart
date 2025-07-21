@@ -9,6 +9,8 @@ import '../../../core/models/property_model.dart';
 import '../providers/property_provider.dart';
 import '../../../core/services/payment_service.dart';
 import '../widgets/enhanced_photo_gallery.dart';
+import '../widgets/report_property_dialog.dart';
+import '../widgets/property_comparison_widget.dart';
 
 class PropertyDetailsScreen extends StatefulWidget {
   final String propertyId;
@@ -26,6 +28,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   late PageController _photoController;
   int _currentPhotoIndex = 0;
   bool _isContactUnlocked = false;
+  final PropertyComparisonManager _comparisonManager = PropertyComparisonManager();
 
   @override
   void initState() {
@@ -90,6 +93,32 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     );
   }
 
+  void _toggleComparison(Property property) {
+    if (_comparisonManager.isInComparison(property.id)) {
+      _comparisonManager.removeFromComparison(property.id);
+      _showSnackBar('Removed from comparison');
+    } else {
+      if (_comparisonManager.isFull) {
+        _showSnackBar('Maximum 3 properties can be compared');
+        return;
+      }
+      if (_comparisonManager.addToComparison(property)) {
+        _showSnackBar('Added to comparison');
+        setState(() {}); // Refresh to update button state
+      }
+    }
+  }
+
+  void _showReportDialog(Property property) {
+    showDialog(
+      context: context,
+      builder: (context) => ReportPropertyDialog(
+        propertyId: property.id,
+        userId: 'current_user_id', // TODO: Get from auth service
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final propertyProvider = context.watch<PropertyProvider>();
@@ -141,6 +170,40 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             pinned: true,
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
+            actions: [
+              // Comparison button
+              IconButton(
+                onPressed: () => _toggleComparison(property),
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _comparisonManager.isInComparison(property.id)
+                        ? Icons.compare_arrows
+                        : Icons.compare_arrows_outlined,
+                    color: _comparisonManager.isInComparison(property.id)
+                        ? AppTheme.primaryColor
+                        : Colors.black,
+                  ),
+                ),
+              ),
+              // Report button
+              IconButton(
+                onPressed: () => _showReportDialog(property),
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.flag_outlined, color: Colors.black),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
