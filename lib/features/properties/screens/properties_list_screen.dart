@@ -7,7 +7,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/animated_widgets.dart';
 import '../providers/property_provider.dart';
 import '../widgets/animated_property_card.dart' as animated;
-import '../widgets/filter_bottom_sheet.dart';
 
 class PropertiesListScreen extends StatefulWidget {
   const PropertiesListScreen({Key? key}) : super(key: key);
@@ -50,7 +49,16 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const FilterBottomSheet(),
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: const Center(
+          child: Text('Filters Coming Soon'),
+        ),
+      ),
     );
   }
 

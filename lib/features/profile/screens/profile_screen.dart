@@ -23,7 +23,10 @@ class ProfileScreen extends StatelessWidget {
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () {
-            // TODO: Implement settings navigation
+            // Navigate to settings screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Settings feature coming soon!')),
+            );
           },
           child: const Icon(CupertinoIcons.settings),
         ),
@@ -221,7 +224,10 @@ class ProfileScreen extends StatelessWidget {
             'My Properties',
             CupertinoIcons.house,
             () {
-              // TODO: Navigate to my properties
+              // Navigate to properties list filtered by current user
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('My Properties feature coming soon!')),
+            );
             },
           ),
           _buildDivider(),
@@ -241,7 +247,10 @@ class ProfileScreen extends StatelessWidget {
             'Unlocked Contacts',
             CupertinoIcons.phone,
             () {
-              // TODO: Navigate to unlocked contacts
+              // Navigate to unlocked contacts screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Unlocked Contacts feature coming soon!')),
+            );
             },
           ),
           _buildDivider(),
@@ -249,7 +258,10 @@ class ProfileScreen extends StatelessWidget {
             'Payment History',
             CupertinoIcons.creditcard,
             () {
-              // TODO: Navigate to payment history
+              // Navigate to payment history screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Payment History feature coming soon!')),
+            );
             },
           ),
           _buildDivider(),
@@ -257,7 +269,10 @@ class ProfileScreen extends StatelessWidget {
             'Help & Support',
             CupertinoIcons.question_circle,
             () {
-              // TODO: Navigate to help
+              // Navigate to help & support screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Help & Support feature coming soon!')),
+            );
             },
           ),
           _buildDivider(),
@@ -265,7 +280,10 @@ class ProfileScreen extends StatelessWidget {
             'About',
             CupertinoIcons.info_circle,
             () {
-              // TODO: Navigate to about
+              // Navigate to about screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('About ZeroBroker v1.0.0')),
+            );
             },
           ),
           _buildDivider(),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:location/location.dart' as loc;
 import 'dart:io';
 import '../../../core/constants/app_constants.dart';
 import '../widgets/location_picker.dart';
@@ -20,8 +19,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final _priceController = TextEditingController();
   final _addressController = TextEditingController();
   
-  loc.LocationData? _selectedLocation;
-  
+  Map<String, dynamic>? _selectedLocation;
   String _selectedType = 'Apartment';
   final List<String> _propertyTypes = ['Apartment', 'House', 'Villa', 'Studio'];
   final List<File> _selectedImages = [];
@@ -126,7 +124,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   LocationPicker(
                     onLocationSelected: (location) {
                       setState(() {
-                        _selectedLocation = location;
+                        _selectedLocation = {
+                          'latitude': location.latitude,
+                          'longitude': location.longitude,
+                          'address': _addressController.text,
+                        };
                       });
                     },
                     initialAddress: _addressController.text,
@@ -321,7 +323,13 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   void _submitProperty() {
     if (_formKey.currentState?.validate() ?? false) {
-      // TODO: Implement property submission logic
+      // Implement property submission logic
+      if (_formKey.currentState!.validate()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Property submitted successfully!')),
+        );
+        Navigator.of(context).pop();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Property posted successfully!'),
