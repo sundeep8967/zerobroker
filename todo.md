@@ -46,8 +46,8 @@
   - [x] Pull-to-refresh animations
   - [x] Card hover/tap effects
   - [x] Floating action button animations
-  - [ ] Map marker animations
-  - [ ] Photo gallery swipe animations
+  - [x] Map marker animations
+  - [x] Photo gallery swipe animations
   
 - [ ] **Design Assets**
   - [ ] Create wireframes for all screens
@@ -124,7 +124,7 @@
   - [x] Map view placeholder with property pins
   - [x] Google Maps integration
   - [x] Property markers
-  - [ ] Cluster markers for multiple properties
+  - [x] Cluster markers for multiple properties
   - [ ] Map filters
 
 - [x] **Property Details Page**

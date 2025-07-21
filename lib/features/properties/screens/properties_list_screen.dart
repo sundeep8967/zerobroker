@@ -6,6 +6,7 @@ import '../../../core/widgets/animated_widgets.dart';
 import '../../../core/constants/app_constants.dart';
 import '../providers/property_provider.dart';
 import '../widgets/property_card.dart';
+import '../widgets/animated_property_card.dart' as animated;
 import '../widgets/filter_bottom_sheet.dart';
 
 class PropertiesListScreen extends StatefulWidget {
@@ -342,9 +343,9 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
           }
           
           final property = propertyProvider.properties[index];
-          return AnimatedPropertyCard(
-            delay: Duration(milliseconds: index * 100),
-            child: PropertyCard(property: property),
+          return animated.AnimatedPropertyCard(
+            property: property,
+            index: index,
           );
         },
       ),

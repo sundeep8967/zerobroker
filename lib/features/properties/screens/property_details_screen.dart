@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/models/property_model.dart';
 import '../providers/property_provider.dart';
 import '../../../core/services/payment_service.dart';
+import '../widgets/enhanced_photo_gallery.dart';
 
 class PropertyDetailsScreen extends StatefulWidget {
   final String propertyId;
@@ -143,38 +144,60 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
-                  // Photo PageView
-                  PageView.builder(
-                    controller: _photoController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPhotoIndex = index;
-                      });
-                    },
-                    itemCount: property.photos.length,
-                    itemBuilder: (context, index) {
-                      return CachedNetworkImage(
-                        imageUrl: property.photos[index],
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: AppTheme.backgroundColor,
-                          child: Center(
-                            child: CircularProgressIndicator(),
+                  // Photo PageView with enhanced tap functionality
+                  GestureDetector(
+                    onTap: () {
+                      // Open enhanced photo gallery
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) =>
+                              EnhancedPhotoGallery(
+                            photos: property.photos,
+                            initialIndex: _currentPhotoIndex,
                           ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: AppTheme.backgroundColor,
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 64,
-                            color: AppTheme.secondaryTextColor,
-                          ),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(opacity: animation, child: child);
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                          opaque: false,
                         ),
                       );
                     },
+                    child: PageView.builder(
+                      controller: _photoController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentPhotoIndex = index;
+                        });
+                      },
+                      itemCount: property.photos.length,
+                      itemBuilder: (context, index) {
+                        return Hero(
+                          tag: 'photo_${property.photos[index]}',
+                          child: CachedNetworkImage(
+                            imageUrl: property.photos[index],
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: AppTheme.backgroundColor,
+                              child: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: AppTheme.backgroundColor,
+                              child: Icon(
+                                Icons.image_not_supported,
+                                size: 64,
+                                color: AppTheme.secondaryTextColor,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   
-                  // Photo indicators
+                  // Enhanced photo indicators with animation
                   if (property.photos.length > 1)
                     Positioned(
                       bottom: 16,
@@ -184,16 +207,62 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
                           property.photos.length,
-                          (index) => Container(
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
                             margin: EdgeInsets.symmetric(horizontal: 4),
-                            width: 8,
+                            width: _currentPhotoIndex == index ? 12 : 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                              borderRadius: BorderRadius.circular(4),
                               color: _currentPhotoIndex == index
                                   ? Colors.white
                                   : Colors.white.withOpacity(0.5),
+                              boxShadow: _currentPhotoIndex == index
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
                             ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  
+                  // Photo count overlay
+                  if (property.photos.length > 1)
+                    Positioned(
+                      top: 60,
+                      left: 16,
+                      child: FadeInLeft(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.photo_library,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${_currentPhotoIndex + 1}/${property.photos.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
